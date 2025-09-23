@@ -130,16 +130,3 @@ async def query_documents(request: QueryRequest):
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
-
-@router.get("/faq")
-async def get_faq():
-    try:
-        faq_file_path = current_dir / "faq.json"
-        if not faq_file_path.exists():
-            raise HTTPException(status_code=404, detail="FAQ file not found")
-        with open(faq_file_path, "r", encoding="utf-8") as f:
-            faq_data = json.load(f)
-        return JSONResponse(status_code=200, content=faq_data)
-    except Exception as e:
-        logger.error(f"Error retrieving FAQ: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving FAQ: {str(e)}")

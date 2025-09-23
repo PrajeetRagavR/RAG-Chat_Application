@@ -1,6 +1,5 @@
 import os
-from typing import Literal, List, Dict, Any
-import json
+from typing import Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -10,7 +9,6 @@ from trustcall import create_extractor
 from llm import get_llm
 from memory_utils import UserProfile, get_across_thread_memory, get_within_thread_memory
 from rag_pipeline import RAGPipeline # Import RAGPipeline
-from embeddings import EmbeddingsManager
 
 
 # Set up Google Generative AI
@@ -38,58 +36,11 @@ class Chatbot:
         self.across_thread_memory = get_across_thread_memory()
         self.within_thread_memory = get_within_thread_memory()
         self.rag_pipeline = RAGPipeline() # Initialize RAGPipeline
-        self.embeddings_manager = EmbeddingsManager() # Initialize EmbeddingsManager
-        self.dynamic_faq_file = Path(__file__).parent / "dynamic_faq.json"
 
         self.graph = self.builder.compile(
             checkpointer=self.within_thread_memory,
             store=self.across_thread_memory
         )
-
-    def _load_dynamic_faqs(self) -> List[Dict[str, Any]]:
-        if self.dynamic_faq_file.exists():
-            with open(self.dynamic_faq_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        return []
-
-    def _save_dynamic_faqs(self, faqs: List[Dict[str, Any]]):
-        with open(self.dynamic_faq_file, "w", encoding="utf-8") as f:
-            json.dump(faqs, f, indent=2)
-
-    def _check_and_add_dynamic_faq(self, message: HumanMessage):
-        faqs = self._load_dynamic_faqs()
-        query_text = message.content
-        query_embedding = self.embeddings_manager.embed_text(query_text)
-
-        # Define a similarity threshold
-        SIMILARITY_THRESHOLD = 0.8  # This can be tuned
-
-        for faq in faqs:
-            if "embedding" in faq and faq["embedding"]:
-                # Calculate cosine similarity (assuming normalized embeddings)
-                similarity = self._cosine_similarity(query_embedding, faq["embedding"])
-                if similarity > SIMILARITY_THRESHOLD:
-                    print(f"Found similar FAQ: {faq['question']} with similarity {similarity}")
-                    return faq["answer"]
-
-        # If no similar FAQ is found, add it as a new FAQ
-        new_faq = {
-            "question": query_text,
-            "answer": "", # Answer will be filled by LLM later
-            "embedding": query_embedding
-        }
-        faqs.append(new_faq)
-        self._save_dynamic_faqs(faqs)
-        print(f"Added new dynamic FAQ: {query_text}")
-        return None
-
-    def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
-        dot_product = sum(v1 * v2 for v1, v2 in zip(vec1, vec2))
-        magnitude1 = sum(v**2 for v in vec1)**0.5
-        magnitude2 = sum(v**2 for v in vec2)**0.5
-        if not magnitude1 or not magnitude2:
-            return 0.0
-        return dot_product / (magnitude1 * magnitude2)
 
     def call_model(self, state: MessagesState, config: RunnableConfig):
         user_id = config["configurable"]["user_id"]
@@ -161,7 +112,6 @@ class Chatbot:
 
     def invoke(self, message: str, thread_id: str, user_id: str):
         config = {"configurable": {"thread_id": thread_id, "user_id": user_id}}
-        self._check_and_add_dynamic_faq(message) # Check and add query to dynamic FAQs
         response = self.graph.invoke({"messages": [HumanMessage(content=message)]}, config)
         llm_response = response["messages"][-1].content
         print(f"LLM Response: {llm_response}") # Add this line to print the LLM response

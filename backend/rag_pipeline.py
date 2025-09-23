@@ -76,6 +76,7 @@ class RAGPipeline:
 
         # Expand the query
         expanded_queries = self.expand_query(query)
+        logger.info(f"Expanded queries: {expanded_queries}")
         
         # Retrieve relevant documents for each expanded query
         all_retrieved_docs = []
@@ -92,6 +93,7 @@ class RAGPipeline:
                 seen_page_content.add(doc.page_content)
 
         retrieved_docs = unique_docs
+        logger.info(f"Retrieved {len(retrieved_docs)} unique documents.")
         
         if not retrieved_docs:
             return {
@@ -100,7 +102,8 @@ class RAGPipeline:
             }
         
         # Rerank documents
-        reranked_docs = self.rerank_documents(query, retrieved_docs)
+        reranked_docs = self.reranker.rerank_documents(query, retrieved_docs)
+        logger.info(f"Reranked {len(reranked_docs)} documents.")
 
         # Check if the highest reranked score is below a threshold
         if reranked_docs and reranked_docs[0].metadata.get("relevance_score", 0) < 0.5:
@@ -134,6 +137,7 @@ class RAGPipeline:
         messages = [
             {"role": "system", "content": "You are ALFRED, a digital butler. Your primary goal is to provide concise and accurate answers based *Strictly* on the provided documents and conversation history. If the information is not available in the given context, state that you cannot find the answer in the provided documents. Avoid making assumptions or inventing information. Maintain a professional and helpful tone."}
         ]
+        logger.info(f"Messages sent to LLM: {messages}")
         
         # Add chat history to messages
         for msg in chat_history:
@@ -145,6 +149,7 @@ class RAGPipeline:
         try:
             completion = self.llm.invoke(messages)
             generated_text = completion.content
+            logger.info(f"LLM generated response: {generated_text}")
             
             # Clean up the answer
             if "Answer:" in generated_text:
