@@ -90,6 +90,14 @@ pip install -r requirements.txt
     # On Windows
     $env:HUGGINGFACE_TOKEN="your_huggingface_token"
     ```
+6.  **NVIDIA API KEY (Optional)**:
+    If you plan to use models provided by NVIDIA that require authentication or higher rate limits, set your NVIDIA API KEY as an environment variable:
+    ```bash
+    export NVIDIA_API_KEY="your_NVIDIA_API_KEY"
+    # On Windows
+    $env:NVIDIA_API_KEY="your_NVIDIA_API_KEY"
+    ```
+    Also if the select models requires a base URL refer to the respective model's NVIDIA documentation.
 
 ### 7. Usage
 
@@ -104,7 +112,7 @@ python main.py
 
 This will start the FastAPI server, typically accessible at `http://localhost:8000`.
 
-#### Running the Voice Assistant (ASR/TTS)
+#### Running the Voice Assistant (ASR/TTS)[In-Development.. feel free to explore your own logic]
 
 To use the real-time voice assistant functionality:
 
