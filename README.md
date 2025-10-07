@@ -37,6 +37,7 @@ The backend is designed with a modular approach to handle various aspects of the
 ### 4. Frontend Structure
 
 The frontend, located in the `frontend/` directory, provides the user interface for interacting with the RAG chatbot. It is built using a web framework (e.g., Streamlit, Flask, React, etc. - *specific framework to be determined or added based on implementation*). The `app.py` file within the `frontend/` directory is the main entry point for the frontend application.
+*The RAG - Chat Application currently uses Streamlit for prototyping.*
 
 - **User Interface**: Presents a conversational interface where users can input text queries or use voice input through the integrated ASR.
 - **Interaction with Backend**: Communicates with the backend API to send user queries, receive chatbot responses, and manage multimodal inputs/outputs. This typically involves HTTP requests to the endpoints exposed by the backend's `api.py`.
@@ -107,7 +108,7 @@ To start the backend API server:
 
 ```bash
 cd backend
-python main.py
+uvicorn main:app --reload
 ```
 
 This will start the FastAPI server, typically accessible at `http://localhost:8000`.
@@ -131,7 +132,7 @@ Typically, you would navigate to the frontend directory and run a command like:
 
 ```bash
 cd frontend
-npm start # or yarn start, or similar command
+streamlit run app.py
 ```
 
 Then, open your browser to `http://localhost:3000` (or the port specified by your frontend).
