@@ -8,7 +8,7 @@ This project implements a multimodal Retrieval-Augmented Generation (RAG) chatbo
 
 ### 2. Features
 
-- **Multimodal Input**: Accepts user queries via text and real-time voice input.
+- **Multimodal Input**: Accepts user queries via text and speech using *ASR(Automatic-Speech-Recognition)* for user input queries, documents(PDF,Docx,txt), audio and video files for the RAG pipeline.
 - **Retrieval-Augmented Generation**: Utilizes a RAG pipeline to fetch relevant information from a knowledge base before generating responses, ensuring accuracy and reducing hallucinations.
 - **Automatic Speech Recognition (ASR)**: Integrates Vosk ASR for accurate and efficient transcription of spoken language into text.
 - **Text-to-Speech (TTS)**: Generates natural-sounding voice responses to users, enhancing the conversational experience.
