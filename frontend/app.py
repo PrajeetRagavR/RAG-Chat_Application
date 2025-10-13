@@ -2,6 +2,7 @@
 import streamlit as st
 import requests
 from datetime import datetime
+from audio_recorder_streamlit import audio_recorder
 
 # ======================
 # Page config
@@ -96,6 +97,42 @@ tab_chat, tab_files, tab_transcriptions, tab_help = st.tabs(
 # ----------------------
 # Chat Tab
 # ----------------------
+# Chat input (always visible)
+user_input = st.chat_input("Ask a question...")
+
+# Voice input option
+audio_bytes = audio_recorder(
+    text="Click to record your voice",
+    recording_color="#e8b62c",
+    neutral_color="#6aa36f",
+    icon_name="microphone",
+    icon_size="2x",
+    pause_threshold=3.0,
+)
+
+if audio_bytes:
+    st.audio(audio_bytes, format="audio/wav")
+    st.info("Audio recorded! Sending to backend for transcription...")
+    try:
+        response = requests.post(f"{BACKEND_URL}/transcribe_audio", data=audio_bytes, headers={"Content-Type": "application/octet-stream"})
+        if response.status_code == 200:
+            transcribed_text = response.json().get("transcribed_text")
+            if transcribed_text:
+                st.session_state.messages.append({"role": "user", "content": transcribed_text})
+                chatbot_response = response.json().get("chatbot_response")
+                if chatbot_response:
+                    st.session_state.messages.append({"role": "assistant", "content": chatbot_response})
+                else:
+                    st.error("Chatbot did not return a response.")
+                # Clear audio_bytes to prevent re-processing
+                audio_bytes = None
+            else:
+                st.error("Transcription failed: No text returned.")
+        else:
+            st.error(f"Transcription failed: {response.text}")
+    except Exception as e:
+        st.error(f"Error sending audio for transcription: {str(e)}")
+
 with tab_chat:
     st.subheader("Chat with your documents")
 
@@ -119,8 +156,6 @@ with tab_chat:
                                 score_text = f" (Relevance: {src['relevance_score']:.3f})" if src.get("relevance_score") else ""
                                 st.write(f"- {src['source']}{score_text}")
 
-    # Chat input (always visible)
-    user_input = st.chat_input("Ask a question...")
     if user_input:
         # Append user's message to display immediately
         st.session_state.messages.append({"role": "user", "content": user_input})

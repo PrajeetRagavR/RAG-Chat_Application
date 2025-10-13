@@ -27,3 +27,5 @@ streamlit-markdown
 requests
 langchain-community
 langgraph
+audio-recorder-streamlit
+trustcall

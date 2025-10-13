@@ -9,7 +9,7 @@ sys.path.append(str(current_dir))
 
 import tempfile
 import uuid
-from fastapi import APIRouter, UploadFile, File, HTTPException, Body
+from fastapi import APIRouter, UploadFile, File, HTTPException, Body, Request
 from fastapi.responses import JSONResponse
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
@@ -95,6 +95,41 @@ async def upload_file(file: UploadFile = File(...)):
         logger.error(f"Error processing file: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
+@router.post("/transcribe_audio")
+async def transcribe_audio(request: Request):
+    try:
+        logger.info("Received audio for transcription.")
+        audio_bytes = await request.body()
+        file_ext = ".wav"  # Assuming WAV format from frontend recorder
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
+            temp_file.write(audio_bytes)
+            temp_file_path = temp_file.name
+        
+        audio_docs = audio_processor.process_audio_files([temp_file_path])
+        
+        os.unlink(temp_file_path)
+        
+        if audio_docs:
+            transcribed_text = audio_docs[0].page_content
+            logger.info(f"Transcribed audio: {transcribed_text[:50]}...")
+
+            # Send the transcribed text to the chatbot
+            session_id = str(uuid.uuid4()) # Generate a new session ID for the audio transcription chat
+            chatbot_response = chatbot.invoke(transcribed_text, session_id, session_id)
+
+            return JSONResponse(status_code=200, content={
+                "transcribed_text": transcribed_text,
+                "chatbot_response": chatbot_response,
+                "session_id": session_id,
+                "detailed_sources": [] # Chatbot doesn't provide sources directly in this setup
+            })
+        else:
+            raise HTTPException(status_code=500, detail="No transcription found.")
+
+    except Exception as e:
+        logger.error(f"Error transcribing audio: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error transcribing audio: {str(e)}")
 
 @router.post("/clear_db")
 async def clear_database():
