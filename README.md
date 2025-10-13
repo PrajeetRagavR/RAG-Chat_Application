@@ -104,17 +104,6 @@ python main.py
 
 This will start the FastAPI server, typically accessible at `http://localhost:8000`.
 
-#### Running the Voice Assistant (ASR/TTS)
-
-To use the real-time voice assistant functionality:
-
-```bash
-cd backend/loaders
-python asr.py
-```
-
-The voice assistant will start listening for your input. Speak into your microphone, and it will transcribe your speech and respond verbally.
-
 #### Interacting with the Frontend
 
 Once the backend is running, you can open the frontend application in your web browser. The specific instructions for running the frontend will depend on the chosen framework (e.g., React, Vue, Angular). Please refer to the frontend's dedicated documentation for detailed steps.
